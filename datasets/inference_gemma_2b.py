@@ -17,7 +17,7 @@ print("Model loaded successfully!")
 
 # 2. Load the Dataset
 input_file = "datasets/train_dataset.json"
-output_file = "datasets/train_dataset_with_targets.json"
+output_file = "datasets/train_dataset_with_targets_full.json"
 
 print(f"Loading dataset from {input_file}...")
 with open(input_file, "r", encoding="utf-8") as f:
@@ -26,7 +26,7 @@ with open(input_file, "r", encoding="utf-8") as f:
 # 3. Processing Loop
 print("Starting generation loop...")
 # We will test on the first 5 samples first
-for sample in tqdm(dataset[:5], desc="Generating targets"):
+for sample in tqdm(dataset, desc="Generating targets"):
     
     info = sample.get("info", {})
     task_prompt = info.get("task_prompt", "")
@@ -67,8 +67,8 @@ for sample in tqdm(dataset[:5], desc="Generating targets"):
     probe_response = tokenizer.decode(probe_outputs[0][probe_len:], skip_special_tokens=True).strip()
     
     # --- Save back to the JSON object ---
-    sample["info"]["no-probe"] = no_probe_response
-    sample["info"]["probe"] = probe_response
+    sample["info"]["no-probe-res"] = no_probe_response
+    sample["info"]["probe-res"] = probe_response
 
 # 4. Save the updated dataset
 print(f"Saving updated dataset to {output_file}...")
