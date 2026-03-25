@@ -93,7 +93,7 @@ class ScriptArguments:
         metadata={"help": "LoRA dropout"},
     )
     peft_target_modules: str = field(
-        default="all-linear",
+        default=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
         metadata={"help": "Which modules to target with LoRA"},
     )
 
@@ -194,7 +194,7 @@ def training_function(
             bias="none",
             target_modules=script_args.peft_target_modules,
             task_type="CAUSAL_LM",
-            modules_to_save=["lm_head", "embed_tokens"],
+            #modules_to_save=["lm_head", "embed_tokens"],
         )
     else:
         peft_config = None
