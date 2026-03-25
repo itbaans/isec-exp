@@ -29,7 +29,7 @@ import random
 import torch
 from datasets import load_dataset
 from transformers import AutoTokenizer, TrainingArguments, AutoModelForCausalLM, BitsAndBytesConfig, set_seed
-from trl.commands.cli_utils import TrlParser
+from trl import TrlParser
 from peft import LoraConfig
 from trl import SFTTrainer
 
