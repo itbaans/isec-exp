@@ -32,10 +32,9 @@ import random
 
 import torch
 from datasets import load_dataset
-from transformers import AutoTokenizer, TrainingArguments, AutoModelForCausalLM, BitsAndBytesConfig, set_seed
-from trl import TrlParser
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, set_seed
 from peft import LoraConfig
-from trl import SFTTrainer
+from trl import TrlParser, SFTTrainer, SFTConfig
 
 
 # ---------------------------------------------------------------------------
@@ -109,7 +108,7 @@ class ScriptArguments:
 
 def training_function(
     script_args: ScriptArguments,
-    training_args: TrainingArguments,
+    training_args: SFTConfig,
 ) -> None:
     """
     Load the IPI dataset, initialise the Gemma model (with optional LoRA / QLoRA),
@@ -212,15 +211,8 @@ def training_function(
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=test_dataset,
-        dataset_text_field=script_args.dataset_text_field,
         peft_config=peft_config,
-        max_seq_length=script_args.max_seq_length,
         tokenizer=tokenizer,
-        packing=True,
-        dataset_kwargs={
-            "add_special_tokens": False,  # Gemma templates already include special tokens
-            "append_concat_token": False,
-        },
     )
 
     if (
@@ -246,8 +238,16 @@ def training_function(
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    parser = TrlParser((ScriptArguments, TrainingArguments))
+    parser = TrlParser((ScriptArguments, SFTConfig))
     script_args, training_args = parser.parse_args_and_config()
+
+    training_args.dataset_text_field = script_args.dataset_text_field
+    training_args.max_seq_length = script_args.max_seq_length
+    training_args.packing = True
+    training_args.dataset_kwargs = {
+        "add_special_tokens": False,
+        "append_concat_token": False,
+    }
 
     if training_args.gradient_checkpointing:
         training_args.gradient_checkpointing_kwargs = {"use_reentrant": True}
