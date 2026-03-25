@@ -92,8 +92,8 @@ class ScriptArguments:
         default=0.05,
         metadata={"help": "LoRA dropout"},
     )
-    peft_target_modules: str = field(
-        default=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+    peft_target_modules: list[str] = field(
+        default_factory=lambda: ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
         metadata={"help": "Which modules to target with LoRA"},
     )
 
