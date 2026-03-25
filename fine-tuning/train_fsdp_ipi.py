@@ -214,7 +214,7 @@ def training_function(
     if (
         trainer.accelerator.is_main_process
         and hasattr(trainer.model, "print_trainable_parameters")
-    ):
+    ):  
         trainer.model.print_trainable_parameters()
 
     # Resume from checkpoint if specified
@@ -241,7 +241,7 @@ if __name__ == "__main__":
         training_args.dataset_text_field = "text"
 
     training_args.max_seq_length = script_args.max_seq_length
-    training_args.packing = True
+    training_args.packing = False
     training_args.dataset_kwargs = {
         "add_special_tokens": False,
         "append_concat_token": False,
