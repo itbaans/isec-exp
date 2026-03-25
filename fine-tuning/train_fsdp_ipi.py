@@ -68,6 +68,10 @@ class ScriptArguments:
         default="google/gemma-1.1-7b-it",
         metadata={"help": "HuggingFace model ID, e.g. google/gemma-1.1-7b-it"},
     )
+    max_seq_length: int = field(
+        default=2048,
+        metadata={"help": "Maximum sequence length for SFTTrainer"},
+    )
     training_mode: str = field(
         default="lora",
         metadata={"help": "Training mode: lora | qlora | fft"},
@@ -205,6 +209,12 @@ def training_function(
         eval_dataset=test_dataset,
         peft_config=peft_config,
         tokenizer=tokenizer,
+        max_seq_length=script_args.max_seq_length,
+        packing=True,
+        dataset_kwargs={
+            "add_special_tokens": False,
+            "append_concat_token": False,
+        },
     )
 
     if (
@@ -235,14 +245,6 @@ if __name__ == "__main__":
 
     if training_args.dataset_text_field is None:
         training_args.dataset_text_field = "text"
-    if training_args.max_seq_length is None:
-        training_args.max_seq_length = 2048
-        
-    training_args.packing = True
-    training_args.dataset_kwargs = {
-        "add_special_tokens": False,
-        "append_concat_token": False,
-    }
 
     if training_args.gradient_checkpointing:
         training_args.gradient_checkpointing_kwargs = {"use_reentrant": True}
