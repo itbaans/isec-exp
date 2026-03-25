@@ -1,6 +1,6 @@
 model_id: "meta-llama/Meta-Llama-3-8B-Instruct"
 dataset_path: "."
-max_seq_len: 3072 # 2048
+max_seq_length: 3072 # 2048
 
 output_dir: "./checkpoints/llama-3-8b-sep-qlora"
 report_to: "wandb"
@@ -13,7 +13,7 @@ gradient_accumulation_steps: 2
 optim: adamw_torch
 logging_steps: 10
 save_strategy: epoch
-evaluation_strategy: epoch
+eval_strategy: epoch
 max_grad_norm: 0.3
 warmup_ratio: 0.03
 bf16: true
