@@ -22,6 +22,10 @@ Usage (example with accelerate + FSDP)
         --learning_rate 2e-4
 """
 
+import os
+os.environ["BNB_CUDA_VERSION"] = "121"  # Forces bitsandbytes to use CUDA 12.1 binaries
+os.environ["LD_LIBRARY_PATH"] = "/usr/local/cuda/lib64:" + os.environ.get("LD_LIBRARY_PATH", "")
+
 from dataclasses import dataclass, field
 import os
 import random
