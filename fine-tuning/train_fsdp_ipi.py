@@ -208,7 +208,7 @@ def training_function(
         train_dataset=train_dataset,
         eval_dataset=test_dataset,
         peft_config=peft_config,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         max_seq_length=script_args.max_seq_length,
         packing=True,
         dataset_kwargs={
