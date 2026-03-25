@@ -6,14 +6,15 @@ output_dir: "./checkpoints/llama-3-8b-sep-qlora"
 report_to: "wandb"
 learning_rate: 0.0002
 lr_scheduler_type: "constant"
-num_train_epochs: 3
+max_steps: 5
+
 per_device_train_batch_size: 1
 per_device_eval_batch_size: 1
 gradient_accumulation_steps: 2
 optim: adamw_torch
-logging_steps: 10
-save_strategy: epoch
-eval_strategy: epoch
+logging_steps: 1
+save_strategy: "no"
+eval_strategy: "no"
 max_grad_norm: 0.3
 warmup_ratio: 0.03
 bf16: true
