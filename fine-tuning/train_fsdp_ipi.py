@@ -64,17 +64,9 @@ class ScriptArguments:
         default=None,
         metadata={"help": "Directory with train_dataset_ipi.json and test_dataset_ipi.json"},
     )
-    dataset_text_field: str = field(
-        default="text",
-        metadata={"help": "Field in each record that contains the formatted training text"},
-    )
     model_id: str = field(
         default="google/gemma-1.1-7b-it",
         metadata={"help": "HuggingFace model ID, e.g. google/gemma-1.1-7b-it"},
-    )
-    max_seq_length: int = field(
-        default=2048,
-        metadata={"help": "Maximum sequence length for SFTTrainer"},
     )
     training_mode: str = field(
         default="lora",
@@ -154,7 +146,7 @@ def training_function(
         desc="Log a few random samples from the processed training set"
     ):
         for index in random.sample(range(len(train_dataset)), min(2, len(train_dataset))):
-            sample_text = train_dataset[index][script_args.dataset_text_field]
+            sample_text = train_dataset[index][training_args.dataset_text_field]
             print(f"\n--- Training sample {index} ---")
             print(sample_text[:600])
             print("...")
@@ -241,8 +233,11 @@ if __name__ == "__main__":
     parser = TrlParser((ScriptArguments, SFTConfig))
     script_args, training_args = parser.parse_args_and_config()
 
-    training_args.dataset_text_field = script_args.dataset_text_field
-    training_args.max_seq_length = script_args.max_seq_length
+    if training_args.dataset_text_field is None:
+        training_args.dataset_text_field = "text"
+    if training_args.max_seq_length is None:
+        training_args.max_seq_length = 2048
+        
     training_args.packing = True
     training_args.dataset_kwargs = {
         "add_special_tokens": False,
