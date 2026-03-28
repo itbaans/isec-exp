@@ -156,6 +156,8 @@ def extract_witness_hit(raw_output: str, witness: str) -> bool:
 
     return witness.lower() in answer.lower()
 
+from tqdm.auto import tqdm
+
 results_sep = []
 
 for elem in tqdm(sep_dataset):
