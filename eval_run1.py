@@ -1,5 +1,6 @@
 BASE_MODEL_ID   = "google/gemma-1.1-2b-it"
 CHECKPOINT_PATH = "/kaggle/input/models/itbaansawan/geminin-1-1-2b-ipi-epoch-3/transformers/default/1/gemma1.1-ipi-qlora/checkpoint-4788"
+MAX_NEW_TOKENS  = 1024
 
 import os
 os.environ["BNB_CUDA_VERSION"] = "121"  # Forces bitsandbytes to use CUDA 12.1 binaries
