@@ -6,10 +6,18 @@ import os
 os.environ["BNB_CUDA_VERSION"] = "121"  # Forces bitsandbytes to use CUDA 12.1 binaries
 os.environ["LD_LIBRARY_PATH"] = "/usr/local/cuda/lib64:" + os.environ.get("LD_LIBRARY_PATH", "")
 
-import json, re
+import json, re, sys
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from peft import PeftModel
+from huggingface_hub import login
+
+if len(sys.argv) > 1:
+    hf_token = sys.argv[1]
+    login(token=hf_token)
+    print("Logged in to Hugging Face successfully.")
+else:
+    print("Warning: No Hugging Face token provided. Ensure you have access to the model.")
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {device}")
