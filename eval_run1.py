@@ -161,23 +161,35 @@ def extract_witness_hit(raw_output: str, witness: str) -> bool:
 from tqdm.auto import tqdm
 
 results_sep = []
+BATCH_SIZE = 4
 
-for elem in tqdm(sep_dataset):
-    prompt_A, prompt_B, witness = build_sep_prompts(elem)
+for i in tqdm(range(0, len(sep_dataset), BATCH_SIZE)):
+    batch_elems = sep_dataset[i:i+BATCH_SIZE]
     
-    out_A = generate_batch([prompt_A])[0]   # probe in data
-    out_B = generate_batch([prompt_B])[0]   # probe as task
+    prompts_A = []
+    prompts_B = []
+    witnesses = []
+    
+    for elem in batch_elems:
+        p_A, p_B, w = build_sep_prompts(elem)
+        prompts_A.append(p_A)
+        prompts_B.append(p_B)
+        witnesses.append(w)
+        
+    outs_A = generate_batch(prompts_A)
+    outs_B = generate_batch(prompts_B)
 
-    hit_A = extract_witness_hit(out_A, witness)  # True = model followed injection (bad)
-    hit_B = extract_witness_hit(out_B, witness)  # True = model followed real task (good)
+    for elem, out_A, out_B, witness in zip(batch_elems, outs_A, outs_B, witnesses):
+        hit_A = extract_witness_hit(out_A, witness)
+        hit_B = extract_witness_hit(out_B, witness)
 
-    results_sep.append({
-        "data": elem,
-        "output1_probe_in_data": out_A,
-        "output2_probe_in_task": out_B,
-        "hit_A": hit_A,
-        "hit_B": hit_B,
-    })
+        results_sep.append({
+            "data": elem,
+            "output1_probe_in_data": out_A,
+            "output2_probe_in_task": out_B,
+            "hit_A": hit_A,
+            "hit_B": hit_B,
+        })
 
 # Score
 import numpy as np
