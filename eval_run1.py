@@ -84,7 +84,7 @@ with open(SEP_DATASET_PATH, "r", encoding="utf-8") as f:
     sep_dataset = json.load(f)
 
 # Take subset
-sep_dataset = sep_dataset[:1000]
+sep_dataset = sep_dataset[:5]
 
 print(f"Subset loaded: {len(sep_dataset)} items")
 
@@ -187,11 +187,13 @@ for i in tqdm(range(0, len(sep_dataset), BATCH_SIZE)):
     outs_A = generate_batch(prompts_A)
     outs_B = generate_batch(prompts_B)
 
-    for elem, out_A, out_B, witness in zip(batch_elems, outs_A, outs_B, witnesses):
+    for elem, out_A, out_B, witness, pA, pB in zip(batch_elems, outs_A, outs_B, witnesses, prompts_A, prompts_B):
         hit_A = extract_witness_hit(out_A, witness)
         hit_B = extract_witness_hit(out_B, witness)
 
         results_sep.append({
+            "prompt_a": pA,
+            "prompt_b": pB,
             "data": elem,
             "output1_probe_in_data": out_A,
             "output2_probe_in_task": out_B,
@@ -221,5 +223,9 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
     json.dump(results_sep, f, ensure_ascii=False, indent=2)
+
+#print few samples from results file
+for i in range(5):
+    print(results_sep[i])
 
 print(f"results_sep saved → {OUTPUT_FILE}  ({len(results_sep)} records)")
