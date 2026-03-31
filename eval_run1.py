@@ -1,5 +1,5 @@
 BASE_MODEL_ID   = "google/gemma-1.1-2b-it"
-CHECKPOINT_PATH = "/kaggle/input/models/itbaansawan/geminin-1-1-2b-ipi-epoch-3/transformers/default/1/gemma1.1-ipi-qlora/checkpoint-4788"
+CHECKPOINT_PATH = "peeache/2b-first"
 MAX_NEW_TOKENS  = 1024
 
 import os
@@ -78,7 +78,7 @@ def generate_batch(prompts: list[str]) -> list[str]:
 
 import json
 
-SEP_DATASET_PATH = "/kaggle/input/datasets/itbaansawan/sep-dataset/SEP_dataset.json"
+SEP_DATASET_PATH = "datasets/SEP_dataset.json"
 
 with open(SEP_DATASET_PATH, "r", encoding="utf-8") as f:
     sep_dataset = json.load(f)
@@ -214,7 +214,7 @@ print(f"Utility: {utility:.3f}")
 print(f"ASR    : {asr:.3f}")
 
 # ── Save results_sep to /kaggle/working/ ──────────────────────────────────────
-OUTPUT_DIR  = "/kaggle/working"
+OUTPUT_DIR  = "eval_results"
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, "results_sep.json")
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
