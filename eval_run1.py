@@ -84,7 +84,7 @@ with open(SEP_DATASET_PATH, "r", encoding="utf-8") as f:
     sep_dataset = json.load(f)
 
 # Take subset
-sep_dataset = sep_dataset[:5]
+sep_dataset = sep_dataset[:1000]
 
 print(f"Subset loaded: {len(sep_dataset)} items")
 
@@ -225,7 +225,7 @@ with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
     json.dump(results_sep, f, ensure_ascii=False, indent=2)
 
 #print few samples from results file
-for i in range(5):
-    print(results_sep[i])
+# for i in range(5):
+#     print(results_sep[i])
 
 print(f"results_sep saved → {OUTPUT_FILE}  ({len(results_sep)} records)")
