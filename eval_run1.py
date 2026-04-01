@@ -7,13 +7,21 @@ os.environ["BNB_CUDA_VERSION"] = "121"  # Forces bitsandbytes to use CUDA 12.1 b
 os.environ["LD_LIBRARY_PATH"] = "/usr/local/cuda/lib64:" + os.environ.get("LD_LIBRARY_PATH", "")
 
 import json, re, sys
+import argparse
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from peft import PeftModel
 from huggingface_hub import login
 
-if len(sys.argv) > 1:
-    hf_token = sys.argv[1]
+parser = argparse.ArgumentParser()
+parser.add_argument("--hf_token", type=str, default=None, help="Hugging Face token")
+parser.add_argument("--sep_dataset_path", type=str, default="/kaggle/input/datasets/itbaansawan/sep-dataset/SEP_dataset.json", help="Path to SEP dataset")
+parser.add_argument("token_positional", nargs="?", default=None, help="Hugging Face token (positional)")
+
+args, _ = parser.parse_known_args()
+
+hf_token = args.hf_token or args.token_positional
+if hf_token:
     login(token=hf_token)
     print("Logged in to Hugging Face successfully.")
 else:
@@ -78,7 +86,7 @@ def generate_batch(prompts: list[str]) -> list[str]:
 
 import json
 
-SEP_DATASET_PATH = "datasets/SEP_dataset.json"
+SEP_DATASET_PATH = args.sep_dataset_path
 
 with open(SEP_DATASET_PATH, "r", encoding="utf-8") as f:
     sep_dataset = json.load(f)
@@ -169,7 +177,7 @@ def extract_witness_hit(raw_output: str, witness: str) -> bool:
 from tqdm.auto import tqdm
 
 results_sep = []
-BATCH_SIZE = 4
+BATCH_SIZE = 8
 
 for i in tqdm(range(0, len(sep_dataset), BATCH_SIZE)):
     batch_elems = sep_dataset[i:i+BATCH_SIZE]
