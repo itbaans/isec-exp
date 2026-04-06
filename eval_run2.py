@@ -16,6 +16,7 @@ from huggingface_hub import login
 parser = argparse.ArgumentParser()
 parser.add_argument("--hf_token", type=str, default=None)
 parser.add_argument("--sep_dataset_path", type=str, default="/kaggle/input/datasets/itbaansawan/sep-dataset/SEP_dataset.json")
+parser.add_argument("--num_samples", type=int, default=1000, help="Number of samples to evaluate (subset size)")
 parser.add_argument("token_positional", nargs="?", default=None)
 
 args, _ = parser.parse_known_args()
@@ -161,7 +162,8 @@ SEP_DATASET_PATH = args.sep_dataset_path
 with open(SEP_DATASET_PATH, "r", encoding="utf-8") as f:
     sep_dataset = json.load(f)
 
-sep_dataset = sep_dataset[:1000]
+if args.num_samples > 0:
+    sep_dataset = sep_dataset[:args.num_samples]
 print(f"Subset loaded: {len(sep_dataset)} items")
 
 # ── Inference loop ────────────────────────────────────────────────────────────
