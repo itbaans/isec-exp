@@ -235,8 +235,8 @@ def training_function(
     # ------------------------------------------------------------------
     # 4. Model
     # ------------------------------------------------------------------
-    torch_dtype         = torch.bfloat16
-    quant_storage_dtype = torch.bfloat16
+    torch_dtype         = torch.float16
+    quant_storage_dtype = torch.float16
 
     if script_args.training_mode == "qlora":
         quantization_config = BitsAndBytesConfig(
