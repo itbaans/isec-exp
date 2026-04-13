@@ -133,8 +133,13 @@ def main() -> None:
     print("Step 4: Launching training...")
     print("=" * 60)
 
+    import shutil  # noqa: PLC0415
+    accelerate_bin = shutil.which("accelerate") or os.path.join(
+        os.path.dirname(sys.executable), "accelerate"
+    )
+
     cmd = [
-        sys.executable, "-m", "accelerate", "launch",
+        accelerate_bin, "launch",
         "--config_file", args.config,
         "fine-tuning/train_fsdp_ipi_2.py",
         "--training_mode",  args.training_mode,
