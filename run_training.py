@@ -52,12 +52,13 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--output_dir",  required=True,  help="Directory to save checkpoints")
 
     # Optional overrides
-    p.add_argument("--dataset_path",   default="datasets/ipi",                        help="Path to IPI dataset directory")
-    p.add_argument("--config",         default="fine-tuning/fsdp_lora_dafaults.yaml", help="Accelerate / FSDP config yaml")
-    p.add_argument("--training_mode",  default="qlora",                               help="lora | qlora | fft")
-    p.add_argument("--wandb_project",  default="ISEC-exp-1",                          help="W&B project name")
-    p.add_argument("--hf_repo_id",     default=None,                                  help="Full Hub repo id (optional; derived from output_dir if omitted)")
-    p.add_argument("--test",           action="store_true",                            help="Smoke-test mode: run only 5 training steps")
+    p.add_argument("--dataset_path",    default="datasets/ipi",                         help="Path to IPI dataset directory")
+    p.add_argument("--train_config",    default="fine-tuning/fsdp_lora_dafaults.yaml",  help="Training config yaml passed to train_fsdp_ipi_2.py (SFTConfig)")
+    p.add_argument("--accelerate_config",default=None,                                  help="Accelerate launcher config yaml (optional). Leave empty for single-GPU defaults.")
+    p.add_argument("--training_mode",   default="qlora",                                help="lora | qlora | fft")
+    p.add_argument("--wandb_project",   default="ISEC-exp-1",                           help="W&B project name")
+    p.add_argument("--hf_repo_id",      default=None,                                   help="Full Hub repo id (optional; derived from output_dir if omitted)")
+    p.add_argument("--test",            action="store_true",                             help="Smoke-test mode: run only 5 training steps")
 
     return p.parse_args()
 
@@ -138,16 +139,21 @@ def main() -> None:
         os.path.dirname(sys.executable), "accelerate"
     )
 
-    cmd = [
-        accelerate_bin, "launch",
-        "--config_file", args.config,
+    cmd = [accelerate_bin, "launch"]
+
+    # Only pass --config_file if the user provided an accelerate launcher config
+    if args.accelerate_config:
+        cmd += ["--config_file", args.accelerate_config]
+
+    cmd += [
         "fine-tuning/train_fsdp_ipi_2.py",
-        "--training_mode",  args.training_mode,
-        "--dataset_path",   args.dataset_path,
-        "--model_id",       args.model_id,
-        "--output_dir",     args.output_dir,
-        "--hf_token",       args.hf_token,
-        "--hf_username",    args.hf_username,
+        "--config",          args.train_config,   # training / SFTConfig yaml
+        "--training_mode",   args.training_mode,
+        "--dataset_path",    args.dataset_path,
+        "--model_id",        args.model_id,
+        "--output_dir",      args.output_dir,
+        "--hf_token",        args.hf_token,
+        "--hf_username",     args.hf_username,
     ]
 
     if args.hf_repo_id:
