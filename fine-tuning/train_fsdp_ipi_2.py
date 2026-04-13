@@ -281,6 +281,18 @@ def training_function(
             target_modules=target_modules,
             task_type="CAUSAL_LM",
         )
+
+        # Apply PEFT early so we can fix adapter dtypes before training.
+        # When fp16=True, the AMP grad scaler crashes if any trainable param
+        # is BFloat16 (LoRA adapters can inherit bf16 from the base model).
+        # Fix: NotImplementedError: _amp_foreach_non_finite_check_and_unscale_cuda
+        #                           not implemented for 'BFloat16'
+        from peft import get_peft_model  # noqa: PLC0415
+        model = get_peft_model(model, peft_config)
+        for name, param in model.named_parameters():
+            if param.requires_grad and param.dtype == torch.bfloat16:
+                param.data = param.data.to(torch.float16)
+        peft_config = None  # SFTTrainer receives the already-wrapped model
     else:
         peft_config = None
 
