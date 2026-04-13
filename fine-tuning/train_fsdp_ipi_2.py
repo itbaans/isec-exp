@@ -42,6 +42,7 @@ import random
 
 import torch
 from datasets import load_dataset
+from huggingface_hub import login
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, set_seed
 from peft import LoraConfig
 from trl import TrlParser, SFTTrainer, SFTConfig
@@ -95,6 +96,7 @@ class ScriptArguments:
     ----------
     dataset_path        : Directory containing train_dataset_ipi.json / test_dataset_ipi.json.
     model_id            : HuggingFace model ID (Gemma, Phi-3, or Llama-3 variant).
+    hf_token            : HuggingFace API token for private/gated model access. Optional.
     max_seq_length      : Maximum token sequence length fed to SFTTrainer. Default: 2048.
     training_mode       : One of 'lora', 'qlora', 'fft'. Default: 'lora'.
     attention_impl      : Attention implementation: 'sdpa' or 'flash_attention_2'. Default: 'sdpa'.
@@ -111,6 +113,10 @@ class ScriptArguments:
     model_id: str = field(
         default="google/gemma-1.1-7b-it",
         metadata={"help": "HuggingFace model ID (gemma, Phi-3, or Llama-3 variant)"},
+    )
+    hf_token: str = field(
+        default=None,
+        metadata={"help": "HuggingFace API token for gated/private model access"},
     )
     max_seq_length: int = field(
         default=2048,
@@ -170,6 +176,14 @@ def training_function(
     """
 
     # ------------------------------------------------------------------
+    # 0. HuggingFace login (if token provided)
+    # ------------------------------------------------------------------
+    if script_args.hf_token:
+        print("Logging in to HuggingFace Hub...")
+        login(token=script_args.hf_token)
+        print("HuggingFace login successful.")
+
+    # ------------------------------------------------------------------
     # 1. Dataset
     # ------------------------------------------------------------------
     train_dataset = load_dataset(
@@ -177,14 +191,8 @@ def training_function(
         data_files=os.path.join(script_args.dataset_path, "train_dataset_ipi.json"),
         split="train",
     )
-    test_dataset = load_dataset(
-        "json",
-        data_files=os.path.join(script_args.dataset_path, "test_dataset_ipi.json"),
-        split="train",
-    )
 
     print(f"Train samples : {len(train_dataset)}")
-    print(f"Test  samples : {len(test_dataset)}")
 
     # ------------------------------------------------------------------
     # 2. Tokenizer
@@ -267,7 +275,6 @@ def training_function(
         model=model,
         args=training_args,
         train_dataset=train_dataset,
-        eval_dataset=test_dataset,
         peft_config=peft_config,
         processing_class=tokenizer,
     )
