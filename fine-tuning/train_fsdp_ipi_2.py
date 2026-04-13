@@ -97,6 +97,9 @@ class ScriptArguments:
     dataset_path        : Directory containing train_dataset_ipi.json / test_dataset_ipi.json.
     model_id            : HuggingFace model ID (Gemma, Phi-3, or Llama-3 variant).
     hf_token            : HuggingFace API token for private/gated model access. Optional.
+    hf_username         : HuggingFace username used when pushing the model to the Hub.
+    hf_repo_id          : Full repo id (username/repo_name) to push the model to.
+                          Defaults to {hf_username}/{output_dir_basename} when not set.
     max_seq_length      : Maximum token sequence length fed to SFTTrainer. Default: 2048.
     training_mode       : One of 'lora', 'qlora', 'fft'. Default: 'lora'.
     attention_impl      : Attention implementation: 'sdpa' or 'flash_attention_2'. Default: 'sdpa'.
@@ -117,6 +120,19 @@ class ScriptArguments:
     hf_token: str = field(
         default=None,
         metadata={"help": "HuggingFace API token for gated/private model access"},
+    )
+    hf_username: str = field(
+        default=None,
+        metadata={"help": "HuggingFace username (required when pushing model to Hub)"},
+    )
+    hf_repo_id: str = field(
+        default=None,
+        metadata={
+            "help": (
+                "Full HuggingFace repo id to push to (e.g. username/my-model). "
+                "Defaults to {hf_username}/{output_dir_basename} when not provided."
+            )
+        },
     )
     max_seq_length: int = field(
         default=2048,
@@ -295,6 +311,18 @@ def training_function(
     if trainer.is_fsdp_enabled:
         trainer.accelerator.state.fsdp_plugin.set_state_dict_type("FULL_STATE_DICT")
     trainer.save_model()
+
+    # ------------------------------------------------------------------
+    # 7. Push LoRA adapter to HuggingFace Hub (main process only)
+    # ------------------------------------------------------------------
+    if trainer.accelerator.is_main_process and script_args.hf_username:
+        repo_id = script_args.hf_repo_id or (
+            f"{script_args.hf_username}/{os.path.basename(training_args.output_dir.rstrip('/'))}"
+        )
+        print(f"Pushing model to HuggingFace Hub: {repo_id}")
+        trainer.model.push_to_hub(repo_id, private=True)
+        tokenizer.push_to_hub(repo_id, private=True)
+        print(f"Model successfully pushed to: https://huggingface.co/{repo_id}")
 
 
 # ---------------------------------------------------------------------------
