@@ -14,7 +14,6 @@ logging_steps: 10
 save_strategy: epoch
 max_grad_norm: 0.3
 warmup_ratio: 0.03
-bf16: false
-fp16: true
+bf16: true
 tf32: false
 gradient_checkpointing: true

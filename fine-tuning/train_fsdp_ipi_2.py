@@ -235,8 +235,8 @@ def training_function(
     # ------------------------------------------------------------------
     # 4. Model
     # ------------------------------------------------------------------
-    torch_dtype         = torch.float16
-    quant_storage_dtype = torch.float16
+    torch_dtype         = torch.bfloat16
+    quant_storage_dtype = torch.bfloat16
 
     if script_args.training_mode == "qlora":
         quantization_config = BitsAndBytesConfig(
@@ -254,9 +254,12 @@ def training_function(
         quantization_config=quantization_config,
         attn_implementation=script_args.attention_impl,
         torch_dtype=quant_storage_dtype,
-        use_cache=False,  # must be False for gradient checkpointing
+        use_cache=False if training_args.gradient_checkpointing else True,
         trust_remote_code=_needs_trust_remote_code(script_args.model_id),
     )
+
+    if training_args.gradient_checkpointing:
+        model.gradient_checkpointing_enable()
 
     # ------------------------------------------------------------------
     # 5. PEFT / LoRA
@@ -278,28 +281,7 @@ def training_function(
             target_modules=target_modules,
             task_type="CAUSAL_LM",
         )
-
-        # Canonical QLoRA setup:
-        # 1. prepare_model_for_kbit_training: freezes base weights, enables
-        #    gradient checkpointing correctly for quantized models, and casts
-        #    layer norms to fp32 for stability.
-        # 2. get_peft_model: adds LoRA adapters (initialised in fp32/fp16).
-        # 3. Cast any remaining bf16 trainable params to fp16 so the AMP
-        #    grad scaler doesn't crash on RTX 3090.
-        from peft import prepare_model_for_kbit_training, get_peft_model  # noqa: PLC0415
-        model = prepare_model_for_kbit_training(
-            model,
-            use_gradient_checkpointing=training_args.gradient_checkpointing,
-        )
-        model = get_peft_model(model, peft_config)
-        for _name, param in model.named_parameters():
-            if param.requires_grad and param.dtype == torch.bfloat16:
-                param.data = param.data.to(torch.float16)
-
-        peft_config = None  # SFTTrainer receives the already-wrapped PeftModel
     else:
-        if training_args.gradient_checkpointing:
-            model.gradient_checkpointing_enable()
         peft_config = None
 
     # ------------------------------------------------------------------
@@ -348,6 +330,17 @@ def training_function(
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    # ------------------------------------------------------------------
+    # Force bf16 detection on Ampere+ GPUs (compute capability >= 8.0).
+    # RTX 3090 (GA102, sm_86) has bf16 ALUs but PyTorch's
+    # torch.cuda.is_bf16_supported() can return False in some environments,
+    # causing transformers to reject bf16=True before training starts.
+    # Patch it before TrlParser runs its validation.
+    # ------------------------------------------------------------------
+    import torch as _torch
+    if _torch.cuda.is_available() and _torch.cuda.get_device_capability()[0] >= 8:
+        _torch.cuda.is_bf16_supported = lambda: True
+
     parser = TrlParser((ScriptArguments, SFTConfig))
     script_args, training_args = parser.parse_args_and_config()
 
@@ -366,9 +359,4 @@ if __name__ == "__main__":
 
     set_seed(training_args.seed)
 
-    import traceback, sys  # noqa: PLC0415, E401
-    try:
-        training_function(script_args, training_args)
-    except Exception:
-        traceback.print_exc()
-        sys.exit(1)
+    training_function(script_args, training_args)
