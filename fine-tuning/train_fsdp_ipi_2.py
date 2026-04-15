@@ -204,7 +204,7 @@ def training_function(
     # ------------------------------------------------------------------
     train_dataset = load_dataset(
         "json",
-        data_files=os.path.join(script_args.dataset_path, "train_dataset_ipi.json"),
+        data_files=os.path.join(script_args.dataset_path, "train_dataset_llama3_ipi.json"),
         split="train",
     )
 
