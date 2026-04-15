@@ -285,7 +285,7 @@ BUILDERS = {
 def main(
     data_path: str,
     out_dir: str,
-    model_type: str = "gemma-1.1",
+    model_type: str = "Llama-3",
     train_frac: float = 0.8,
     seed: int = 42,
     sample_types: str = "injected,multi,clean,probe",
@@ -341,8 +341,8 @@ def main(
     test_records  = records[split_idx:]
 
     os.makedirs(out_dir, exist_ok=True)
-    train_path = os.path.join(out_dir, "train_dataset_ipi.json")
-    test_path  = os.path.join(out_dir, "test_dataset_ipi.json")
+    train_path = os.path.join(out_dir, "train_dataset_llama3_ipi.json")
+    test_path  = os.path.join(out_dir, "test_dataset_llama3_ipi.json")
 
     with open(train_path, "w", encoding="utf-8") as f:
         json.dump(train_records, f, ensure_ascii=False, indent=2)
