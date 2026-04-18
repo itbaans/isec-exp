@@ -178,6 +178,10 @@ print(f"Subset loaded: {len(sep_dataset)} items")
 from tqdm.auto import tqdm
 import numpy as np
 
+OUTPUT_DIR  = "eval_results"
+OUTPUT_FILE = os.path.join(OUTPUT_DIR, "results_sep.json")
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
 results_sep = []
 BATCH_SIZE = 8   # each batch now sends 2×BATCH_SIZE prompts (A+B merged)
 
@@ -215,6 +219,10 @@ for i in tqdm(range(0, len(sep_dataset), BATCH_SIZE)):
             "hit_B":                hit_B,
         })
 
+    # Save progress after each batch to avoid data loss
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+        json.dump(results_sep, f, ensure_ascii=False, indent=2)
+
 # ── Scoring ───────────────────────────────────────────────────────────────────
 hit_A_arr = np.array([r["hit_A"] for r in results_sep])
 hit_B_arr = np.array([r["hit_B"] for r in results_sep])
@@ -228,12 +236,4 @@ print(f"SEP    : {sep_score:.3f}")
 print(f"Utility: {utility:.3f}")
 print(f"ASR    : {asr:.3f}")
 
-# ── Save ──────────────────────────────────────────────────────────────────────
-OUTPUT_DIR  = "eval_results"
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, "results_sep.json")
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-    json.dump(results_sep, f, ensure_ascii=False, indent=2)
-
-print(f"results_sep saved → {OUTPUT_FILE}  ({len(results_sep)} records)")
+print(f"Final results_sep saved → {OUTPUT_FILE}  ({len(results_sep)} records)")
