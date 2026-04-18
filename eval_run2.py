@@ -1,5 +1,3 @@
-BASE_MODEL_ID   = "google/gemma-1.1-2b-it"
-CHECKPOINT_PATH = "peeache/2b-first"
 MAX_NEW_TOKENS  = 1024
 
 import os
@@ -15,11 +13,16 @@ from huggingface_hub import login
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--hf_token", type=str, default=None)
+parser.add_argument("--base_model_id", type=str, default="google/gemma-1.1-2b-it", help="Base model ID to load")
+parser.add_argument("--checkpoint_path", type=str, default="peeache/2b-first", help="Path to Peft checkpoint")
 parser.add_argument("--sep_dataset_path", type=str, default="/kaggle/input/datasets/itbaansawan/sep-dataset/SEP_dataset.json")
 parser.add_argument("--num_samples", type=int, default=1000, help="Number of samples to evaluate (subset size)")
 parser.add_argument("token_positional", nargs="?", default=None)
 
 args, _ = parser.parse_known_args()
+
+BASE_MODEL_ID = args.base_model_id
+CHECKPOINT_PATH = args.checkpoint_path
 
 hf_token = args.hf_token or args.token_positional
 if hf_token:
@@ -107,9 +110,14 @@ SYSTEM_HEADER = (
     "}"
 )
 
-GEMMA_USER_START  = "<start_of_turn>user\n"
-GEMMA_USER_END    = "<end_of_turn>\n"
-GEMMA_MODEL_START = "<start_of_turn>model\n"
+if "llama" in BASE_MODEL_ID.lower():
+    USER_START  = "<|start_header_id|>user<|end_header_id|>\n\n"
+    USER_END    = "<|eot_id|>\n"
+    MODEL_START = "<|start_header_id|>assistant<|end_header_id|>\n\n"
+else:
+    USER_START  = "<start_of_turn>user\n"
+    USER_END    = "<end_of_turn>\n"
+    MODEL_START = "<start_of_turn>model\n"
 
 
 def build_sep_prompts(elem: dict):
@@ -135,10 +143,10 @@ def build_sep_prompts(elem: dict):
 
     def make_prompt(user):
         return (
-            GEMMA_USER_START
+            USER_START
             + SYSTEM_HEADER + "\n\n" + user
-            + GEMMA_USER_END
-            + GEMMA_MODEL_START
+            + USER_END
+            + MODEL_START
         )
 
     return make_prompt(user_A), make_prompt(user_B), elem["witness"]
